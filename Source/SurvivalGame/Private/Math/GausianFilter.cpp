@@ -2,60 +2,78 @@
 
 #include <valarray>
 
-#include "Math/SupportMethods.h"
-
 using namespace std;
 
-void GausianFilter::CreateKernel(float** Kernel, int Size, float Sigma)
+void GausianFilter::CreateKernel()
 {
 	float Sum = 0;
-	float KernelRadius = (Size - 1) / 2;
-	for (int i = 0; i < Size; i++)
-		for (int j = 0; j < Size; j++)
+	Kernel = new float*[KernelSize];
+	for (int i = 0; i < KernelSize; i++)
+		Kernel[i] = new float[KernelSize];
+	float KernelRadius = (KernelSize - 1) / 2;
+	for (int i = 0; i < KernelSize; i++)
+		for (int j = 0; j < KernelSize; j++)
 		{
-			double x = Gausian(i, KernelRadius, Sigma)
-				* Gausian(j, KernelRadius, Sigma);
+			double x = Gausian(i, KernelRadius)
+				* Gausian(j, KernelRadius);
 			Kernel[i][j] = x;
 			Sum += x;
 		}
-	for (int i = 0; i < Size; i++)
-		for (int j = 0; j < Size; j++)
+	for (int i = 0; i < KernelSize; i++)
+		for (int j = 0; j < KernelSize; j++)
 		{
 			Kernel[i][j] /= Sum;
 		}
-		SupportMethods::PrintMass(Kernel,Size);
 }
 
 
-float GausianFilter::Gausian(float X, float Mu, float Sigma)
+float GausianFilter::Gausian(float X, float Mu)
 {
 	const float A = (X - Mu) / Sigma;
 	return std::exp(-0.5 * A * A);
 }
 
-void GausianFilter::SmoothMap(float** Map, int MapSize, float** FinalMap, float** Kernel,int KernelSize)
+GausianFilter::GausianFilter(FGausianParameters Parameters, int Size)
+{
+	Kernel = nullptr;
+	KernelSize = Parameters.KernelSize;
+	Sigma = Parameters.Sigma;
+	MapSize = Size;
+	CreateKernel();
+}
+
+void GausianFilter::SmoothMap(float** Map, float** FinalMap)
 {
 	float** PixelMap = new float*[KernelSize];
-	for(int i=0;i<KernelSize;i++)
+	for (int i = 0; i < KernelSize; i++)
 	{
 		PixelMap[i] = new float[KernelSize];
 	}
-	const int Border = (KernelSize-1)/2;
-	for (int i = Border; i < MapSize - Border; i++)
-		for (int j = Border; j < MapSize - Border; j++)
+	const int Border = (KernelSize - 1) / 2;
+	for (int i = 0; i < MapSize; i++)
+		for (int j = 0; j < MapSize; j++)
 		{
-			for(int k = 0;k<KernelSize;k++)
+			for (int k = 0; k < KernelSize; k++)
 			{
-				for(int l = 0;l<KernelSize;l++)
+				for (int l = 0; l < KernelSize; l++)
 				{
-					PixelMap[k][l] = Map[i+k-Border][j+l-Border]*Kernel[k][l];
+					int XIndex = i + k - Border;
+					int YIndex = j + l - Border;
+					if ((XIndex > 0) & (XIndex < MapSize) & (YIndex > 0) & (YIndex < MapSize))
+					{
+						PixelMap[k][l] = Map[i + k - Border][j + l - Border] * Kernel[k][l];
+					}
+					else
+					{
+						PixelMap[k][l] = -1;
+					}
 				}
 			}
 			float Sum = 0;
-			for(int k=0;k<KernelSize;k++)
-				for(int l=0;l<KernelSize;l++)
-					Sum+=PixelMap[k][l];
+			for (int k = 0; k < KernelSize; k++)
+				for (int l = 0; l < KernelSize; l++)
+					Sum += PixelMap[k][l] < 0 ? 0 : PixelMap[k][l];
+
 			FinalMap[i][j] = Sum;
 		}
 }
-

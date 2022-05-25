@@ -1,0 +1,14 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UE4Editor-SimplexNoise-0109.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"F:\Projects\SurvivalGame\Intermediate\Build\Win64\SurvivalGameEditor\Development\Engine\SharedPCH.Engine.ShadowErrors.h.obj"
+"F:\Projects\SurvivalGame\Plugins\SimplexNoise\Intermediate\Build\Win64\UE4Editor\Development\SimplexNoise\Module.SimplexNoise.cpp.obj"
+"F:\Projects\SurvivalGame\Plugins\SimplexNoise\Intermediate\Build\Win64\UE4Editor\Development\SimplexNoise\Module.SimplexNoise.gen.cpp.obj"
+"F:\Projects\SurvivalGame\Plugins\SimplexNoise\Intermediate\Build\Win64\UE4Editor\Development\SimplexNoise\Default.rc2.res"
+/OUT:"F:\Projects\SurvivalGame\Plugins\SimplexNoise\Intermediate\Build\Win64\UE4Editor\Development\SimplexNoise\UE4Editor-SimplexNoise-0109.lib"
+/INCLUDE:IMPLEMENT_MODULE_SimplexNoise

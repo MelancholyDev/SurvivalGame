@@ -1,54 +1,76 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Enums/EBiomType.h"
 #include "VoxelChank.h"
+#include "Classes/Generator.h"
 #include "GameFramework/PlayerController.h"
-#include "Structures/FHeightParameters.h"
-#include "Structures/FTemperatureParameter.h"
 #include "Factories/CompositeDataTableFactory.h"
 #include "Structures/FBiomData.h"
 #include "Structures/FVoxelLine.h"
-#include "Structures/FGausianParameters.h"
 #include "Structures/FVoxelGeneraionData.h"
+#include "Structures/FGenerationParameters.h"
+
 #include "GenerationPlayerController.generated.h"
 
 UCLASS()
 class SURVIVALGAME_API AGenerationPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	int Multiplier;
-	int MapSize;
-	int ChunkLength;
-	
-	FIntVector OldCoordinates;
-	TArray<FVoxelLine>* Map;
-	FActorSpawnParameters* ChunkRenderLines;
-	
-	float** HeightMap;
-	float** HeatMap;
-	float** MoistureMap;
-	float** WaterMap;
-	float** GausianKernel;
-
+public:
+	//SerializedParameters
+	UPROPERTY(EditAnywhere)
+	TEnumAsByte<EGenerationType> GenerationType;
+	UPROPERTY(EditAnywhere)
+	bool IsApplyGausianFilter;
+	UPROPERTY(EditAnywhere)
+	bool IsAddBezierFunction;
+	UPROPERTY(EditAnywhere)
+	int RenderRange;
+	UPROPERTY(EditAnywhere)
+	int ChunkSize;
+	UPROPERTY(EditAnywhere)
+	int VoxelSize;
+	UPROPERTY(EditAnywhere)
+	float NoiseScale;
+	UPROPERTY(EditAnywhere)
+	FDiamondSquareParameters DiamondSquareParameters;
+	UPROPERTY(EditAnywhere)
+	FPerlinNoiseParameters PerlinNoiseParameters;
 	UPROPERTY(EditAnywhere)
 	FGausianParameters GausianParameters;
 	UPROPERTY(EditAnywhere)
-	FHeightParameters HeightParameters;
+	FTemperatureAndMoistureParameters TemperatureAndMoistureParameters;
 	UPROPERTY(EditAnywhere)
-	FTemperatureParameters TemperatureParameters;
+	FUndergroundParameters UndergroundParameters;
 	UPROPERTY(EditAnywhere)
-	FVoxelGenerationData VoxelGenerationData;
+	FWaterParameters WaterParameters;
+	UPROPERTY(EditAnywhere)
+	bool UpdateMap;
+	UPROPERTY(EditAnywhere)
+	UDataTable* BiomDataSet;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AVoxelChank> ToSpawn;
+	//End Serializedparameters
+private:
+	FGenerationParameters GenerationParameters;
+	int MapSize;
+	int ChunkLength;
+	FIntVector OldCoordinates;
+	TArray<FVoxelLine>* Map;
+	FActorSpawnParameters* ChunkRenderLines;
+	Generator* GeneratorInstance;
+	FVoxelGenerationData VoxelGenerationData;
 
-	TMap<EBiomType,FBiomData> BiomDataSet;
-	UPROPERTY(EditAnywhere)
-	UDataTable* DataTableBiome;
-	
+	float** HeightMap;
+	EBiomType** BiomMap;
+	float** WaterMap;
+	float*** UndergroundMap;
+
 public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
+	UFUNCTION(BlueprintCallable)
+	void PrintFullMap();
 private:
 	void GetFullSize();
 	void XShift(int X);
@@ -59,18 +81,13 @@ private:
 	void AddColumn(bool isLeft);
 	void AppendColumn(int Index, bool isLeft);
 	void DeleteColumn(int Index);
-	
-	void InitializeParameters();
-	void InitializeBiomData();
-	void InitializeGausianKernel();
 
-	uint8 GetBiom(float Noise);
-	float Clamp(float x, float left, float right);
-	
+	void InitializeParameters();
 	void GenerateMaps();
-	void GenerateHeightMap(int LeftBorder, int RightBorder);
-	void GenerateHeatMap(int LeftBorder, int RightBorder);
-	
+	void GenerateHeightMap() const;
+	void GenerateBiomMap() const;
+	void GenerateCaveMap() const;
+
 	AVoxelChank* SpawnChunk(float X, float Y, float Z);
 	FIntVector GetPlayerChunkCoordinates();
 };

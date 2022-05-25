@@ -1,18 +1,18 @@
 ﻿#pragma once
 #include "Enums/EBiomType.h"
 #include "Engine/DataTable.h"
-#include "FbiomData.generated.h"
+#include "FBiomData.generated.h"
 
 USTRUCT(BlueprintType)
 struct FBiomData : public FTableRowBase
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 	UPROPERTY(EditAnywhere)
 	TEnumAsByte<EBiomType> Type;
 	UPROPERTY(EditAnywhere)
-	int Max = 0;
+	float Max;
 	UPROPERTY(EditAnywhere)
-	int Min = 1;
+	float Min;
 	UPROPERTY(EditAnywhere)
 	float B;
 	UPROPERTY(EditAnywhere)
@@ -26,7 +26,7 @@ struct FBiomData : public FTableRowBase
 	UPROPERTY(EditAnywhere)
 	float Y2;
 
-	void CheckValue(int Number)
+	void CheckValue(float Number)
 	{
 		if (Number < Min)
 		{

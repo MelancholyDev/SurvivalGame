@@ -1,0 +1,9 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.NoiseBlueprintLibrary.cpp.obj": [
+			"NoiseBlueprintLibrary.cpp.obj",
+			"PerlinNoiseBPLibrary.cpp.obj"
+		]
+	}
+}

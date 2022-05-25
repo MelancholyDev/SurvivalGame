@@ -3,14 +3,14 @@
 #include "Point.h"
 #include "vector"
 
-float BezierComputations::BezierLut(float X1, float Y1, float X2, float Y2, float A, float X)
+float BezierComputations::BezierLut(float X)
 {
 	auto t = Linspace(0, 1, 256);
 	std::vector<float> vecX{};
 	std::vector<float> vecY{};
 	for (int i = 0; i < t.size(); i++)
 	{
-		Point a = Bezier(X1, Y1, X2, Y2, A, t.at(i));
+		Point a = Bezier(t.at(i));
 		vecX.push_back(a.X);
 		vecY.push_back(a.Y);
 	}
@@ -18,7 +18,7 @@ float BezierComputations::BezierLut(float X1, float Y1, float X2, float Y2, floa
 	return result;
 }
 
-Point BezierComputations::Bezier(float X1, float Y1, float X2, float Y2, float A, float T)
+Point BezierComputations::Bezier( float T) const
 {
 	Point P1 = Point(0, 0);
 	Point P2 = Point(X1, Y1);
@@ -28,77 +28,100 @@ Point BezierComputations::Bezier(float X1, float Y1, float X2, float Y2, float A
 	return Result;
 }
 
-float BezierComputations::FilterMap(float HeightMap, float SmoothMap, FBiomData Biom)
+BezierComputations::BezierComputations(TMap<EBiomType, FBiomData> BiomDataSet)
 {
-	float B = Biom.B;
+	DataSet=BiomDataSet;
+	X1 =0;
+	X2=0;
+	Y1=0;
+	Y2=0;
+	A=0;
+}
+
+float BezierComputations::FilterMap(float HeightMap, float SmoothMap, TEnumAsByte<EBiomType> BiomData)
+{
+	FBiomData* Biom = DataSet.Find(BiomData);
+	float B = Biom->B;
+	X1 = Biom->X1;
+	X2 = Biom->X2;
+	Y1 = Biom->Y1;
+	Y2 = Biom->Y2;
+	A = Biom->A;
 	float X = B * HeightMap + (1 - B) * SmoothMap;
-	float Y = BezierLut(Biom.X1, Biom.Y1, Biom.X2, Biom.Y2, Biom.A, X);
+	float Y = BezierLut(X);
 	return Y;
 }
 
-int NearestNeighbourIndex(std::vector<float>& x, float& value)
+void BezierComputations::CheckValue(float Value,TEnumAsByte<EBiomType> BiomData)
 {
-	float dist = std::numeric_limits<float>::max();
-	float newDist;
-	size_t idx = 0;
+	FBiomData* Biom = DataSet.Find(BiomData);
+	Biom->CheckValue(Value);
+}
+
+int BezierComputations::NearestNeighbourIndex(std::vector<float>& x, float& value)
+{
+	float Dist = std::numeric_limits<float>::max();
+	float NewDist;
+	size_t Idx = 0;
 
 	for (size_t i = 0; i < x.size(); ++i)
 	{
-		newDist = std::abs(value - x[i]);
-		if (newDist <= dist)
+		NewDist = std::abs(value - x[i]);
+		if (NewDist <= Dist)
 		{
-			dist = newDist;
-			idx = i;
+			Dist = NewDist;
+			Idx = i;
 		}
 	}
-	
-	return idx;
+
+	return Idx;
 }
 
-float Interpolation1(std::vector<float>& x, std::vector<float>& y, float& x_new)
+float BezierComputations::Interpolation1(std::vector<float>& X, std::vector<float>& Y, float& XNew)
 {
-	float y_new;
-	float dx, dy, m, b;
-	size_t x_max_idx = x.size() - 1;
-	size_t idx = NearestNeighbourIndex(x, x_new);
-	if (x[idx] > x_new)
+	float YNew;
+	float DX, DY, M, B;
+	size_t XMaxIdx = X.size() - 1;
+	size_t Idx = NearestNeighbourIndex(X, XNew);
+	if (X[Idx] > XNew)
 	{
-		dx = idx > 0 ? (x[idx] - x[idx - 1]) : (x[idx + 1] - x[idx]);
-		dy = idx > 0 ? (y[idx] - y[idx - 1]) : (y[idx + 1] - y[idx]);
+		DX = Idx > 0 ? (X[Idx] - X[Idx - 1]) : (X[Idx + 1] - X[Idx]);
+		DY = Idx > 0 ? (Y[Idx] - Y[Idx - 1]) : (Y[Idx + 1] - Y[Idx]);
 	}
 	else
 	{
-		dx = idx < x_max_idx ? (x[idx + 1] - x[idx]) : (x[idx] - x[idx - 1]);
-		dy = idx < x_max_idx ? (y[idx + 1] - y[idx]) : (y[idx] - y[idx - 1]);
+		DX = Idx < XMaxIdx ? (X[Idx + 1] - X[Idx]) : (X[Idx] - X[Idx - 1]);
+		DY = Idx < XMaxIdx ? (Y[Idx + 1] - Y[Idx]) : (Y[Idx] - Y[Idx - 1]);
 	}
-	m = dy / dx;
-	b = y[idx] - x[idx] * m;
-	y_new = x_new * m + b;
+	M = DY / DX;
+	B = Y[Idx] - X[Idx] * M;
+	YNew = XNew * M + B;
 
-	return y_new;
+	return YNew;
 }
 
-std::vector<float> Linspace(float start_in, float end_in, int num_in)
+std::vector<float> BezierComputations::Linspace(float StartIn, float EndIn, int NumIn)
 {
-	std::vector<float> linspaced;
+	std::vector<float> Linspaced;
 
-	double start = start_in;
-	double end = end_in;
-	double num = num_in;
+	double Start = StartIn;
+	double End = EndIn;
+	double Num = NumIn;
 
-	if (num == 0) { return linspaced; }
-	if (num == 1)
+	if (Num == 0) { return Linspaced; }
+	if (Num == 1)
 	{
-		linspaced.push_back(start);
-		return linspaced;
+		Linspaced.push_back(Start);
+		return Linspaced;
 	}
 
-	double delta = (end - start) / (num - 1);
+	double Delta = (End - Start) / (Num - 1);
 
-	for (int i = 0; i < num - 1; ++i)
+	for (int i = 0; i < Num - 1; ++i)
 	{
-		linspaced.push_back(start + delta * i);
+		Linspaced.push_back(Start + Delta * i);
 	}
-	linspaced.push_back(end);
-	return linspaced;
+	Linspaced.push_back(End);
+	return Linspaced;
 }
+

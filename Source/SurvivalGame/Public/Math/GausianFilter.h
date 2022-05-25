@@ -1,10 +1,17 @@
 ﻿#pragma once
+#include "Structures/FGausianParameters.h"
 
 class GausianFilter
 {
 public:
-	static void CreateKernel(float** Kernel, int Size, float Sigma);
-	static void SmoothMap(float** Map, int MapSize, float** FinalMap, float** Kernel,int KernelMap);
+	GausianFilter(FGausianParameters Parameters, int Size);
+	void SmoothMap(float** Map, float** FinalMap);
 private:
-	static float Gausian(float X, float Mu, float Sigma);
+	void CreateKernel();
+	float Gausian(float X, float Mu);
+
+	int MapSize;
+	int KernelSize;
+	float** Kernel;
+	float Sigma;
 };
